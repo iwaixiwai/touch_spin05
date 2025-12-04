@@ -5,13 +5,20 @@ let pX, pY; // 表示のセンター座標
 let circle_in, circle_out; // タッチする円の内径、外径
 let rect_length,rect_width; // 表示する四角の長さと幅
 let touch_onoff;
+let ball_size;
 
 let img = []; //画像の配列をつくる
+let snd = [];
+let index = 0;
+let index_old;
 
 // 画像を読み込む
 function preload() 
 {
   img[0] = loadImage("phenakistiscope_face_1833s.png"); 
+  snd[0] = loadSound('flipbook01_short.wav');
+  snd[1] = loadSound('flipbook02_short.wav');
+  snd[2] = loadSound('flipbook03_short.wav');
 }
 
 function setup() 
@@ -25,9 +32,12 @@ function setup()
   createCanvas(windowWidth, windowHeight);
   ww = windowWidth;
   wh = windowHeight;
+  
+  angleMode(DEGREES); // 角度の単位をradianからdegreeに変更
 }
 
-function draw() {
+function draw() 
+{
   background(200);
   
   // タッチがある場合はタッチ座標を使用し、ない場合はマウス座標を使用
@@ -58,8 +68,9 @@ function draw() {
       circle_in = ww/3*0.95;
       circle_out = ww/5*1.05;
     }
-      rect_length = ww*0.8;
-      rect_width = ww*0.1;
+    rect_length = ww*0.8;
+    rect_width = ww*0.1;
+    ball_size = ww*0.06;
   }
   else
   {
@@ -79,6 +90,7 @@ function draw() {
     }
     rect_length = wh*0.8;
     rect_width = wh*0.1;
+    ball_size = wh*0.06;
   }
     
   push();
@@ -103,19 +115,32 @@ function draw() {
   let x = uX - cX;
   let y = uY - cY;
 
-  // マウスと原点の間の角度を計算
+  // マウスと原点の間の角度を計算 -180〜180度
   let a = atan2(y, x);
+  
+  push();
+    translate(cX, cY);
+    push();
+      rotate(a);
+      noStroke();
+      fill(255);
+      translate(circle_out/2, 0);
+      ellipse(0,0,ball_size,ball_size);
+    pop();
+  pop();
 
   push();
   // 原点を中心に移動
   translate(pX, pY);
 
   // 回転
-  rotate(a);
+  rotate((int)((a+180)/30)*30+180);
 
+  index = (int)((a+180)/30);
+  
   push();
 
-    if(ww < wh)
+  if(ww < wh)
   {
     scale(ww/img[0].width*0.8);
   }
@@ -123,22 +148,34 @@ function draw() {
   {
     scale(wh/img[0].width*0.8);
   }
+  push();
+  rotate(90);
   
   // 驚き盤画像を描画 画像の中心を原点に
   image(img[0], -img[0].width/2,-img[0].height/2);
   pop();
-
-/*  
-  fill(255);
-  rect(-rect_length/2, -rect_width/2, rect_length, rect_width);
-*/
   pop();
+  push();
+      noStroke();
+      fill(0);
+      translate(rect_length/2, 0);
+      ellipse(0,0,ball_size,ball_size);
+  pop();
+  pop();
+
+  if(index != index_old)
+  {
+    snd[index%3].stop();
+    snd[index%3].play();
+  }
+  
+  index_old = index;
   
 }
 
 function mousePressed() 
 {
-//    snd[0].play();
+  snd[0].play();
   uX = mouseX;
   uY = mouseY;
   touch_onoff = true;
